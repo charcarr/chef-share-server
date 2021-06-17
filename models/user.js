@@ -16,8 +16,8 @@ const userSchema = mongoose.Schema({
   recipeStore: {
     type: Array,
     required: false,
-    default: []
-  }
+    default: [],
+  },
 });
 
 module.exports = mongoose.model('User', userSchema);
