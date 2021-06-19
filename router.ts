@@ -1,5 +1,4 @@
 import express from 'express';
-const router = express.Router();
 import userController from './controllers/users';
 import recipeScrapingController from './controllers/recipeScraper';
 import recipeController from './controllers/recipe';
