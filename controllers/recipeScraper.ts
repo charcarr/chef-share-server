@@ -1,8 +1,8 @@
-const cheerio = require('cheerio');
-const fetch = require('node-fetch');
-const _ = require('lodash');
-const User = require('../models/user');
-const uuid = require('uuid');
+import cheerio from 'cheerio';
+import fetch from 'node-fetch';
+import _ from 'lodash';
+import User from '../models/user';
+import uuid from 'uuid';
 
 
 const fetchWithTimeout = (url, options, timeout = 5000) => {
@@ -92,7 +92,7 @@ const handleScrape = async (req, res) => {
     if(!jsonld) throw new Error('no json ld');
 
     const recipe = extractData(jsonld);
-    recipe.url = req.body.url
+    recipe.url = req.body.url;
     recipe.id = uuid.v4();
     recipe.notes = [];
 
@@ -110,9 +110,4 @@ const handleScrape = async (req, res) => {
 
 }
 
-
-
-
-
-
-module.exports = { handleScrape}
+export default { handleScrape};

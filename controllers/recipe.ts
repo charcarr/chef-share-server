@@ -1,4 +1,4 @@
-const User = require("../models/user");
+import User from "../models/user";
 
 const deleteRecipe = async (req, res) => {
   const userId = req.body._id;
@@ -58,5 +58,4 @@ const editRecipe = async(req, res) => {
   }
 }
 
-
-module.exports = { deleteRecipe, addFromFriend, editRecipe};
+export default { deleteRecipe, addFromFriend, editRecipe };

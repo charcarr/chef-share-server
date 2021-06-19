@@ -1,16 +1,16 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 const { DB_CONN } = process.env;
 
 mongoose.connect(
    DB_CONN,
   { useNewUrlParser: true, useUnifiedTopology: true },
-  (err) => {
-    if (err) {
-      console.log(`😞 can't connet to db, something went wrong! ${err}`);
+  (error: any) => {
+    if (error) {
+      console.log(`😞 can't connet to db, something went wrong! ${error}`);
     } else {
       console.log(`🦆 database connected!`);
     }
   }
 );
 
-module.exports = mongoose;
+export default mongoose;
