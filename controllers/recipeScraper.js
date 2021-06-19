@@ -92,7 +92,7 @@ const handleScrape = async (req, res) => {
     if(!jsonld) throw new Error('no json ld');
 
     const recipe = extractData(jsonld);
-    recipe.url = req.body.url
+    recipe.url = req.body.url;
     recipe.id = uuid.v4();
     recipe.notes = [];
 
