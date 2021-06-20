@@ -1,11 +1,12 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import User from '../models/user';
+import { Request, Response } from 'express';
 import { validateToken, invalidateToken } from '../middlewares/tokenValidation';
 
 const SECRET_KEY = process.env.SECRET_KEY;
 
-const createUser = async (req, res) => {
+const createUser = async (req: Request, res: Response) => {
   try {
     const {email, password, username} = req.body;
 
@@ -35,7 +36,7 @@ const createUser = async (req, res) => {
   }
 }
 
-const login = async (req, res) => {
+const login = async (req: Request, res: Response): Promise<void> => {
   const { email, password } = req.body;
   if (!email || !password) {
     return res.status(400).end('username and password are required');
@@ -53,7 +54,7 @@ const login = async (req, res) => {
 }
 
 
-const profile = async (req, res) => {
+const profile = async (req: Request, res: Response): Promise<void> => {
   const user = await User.findById(req.body._id);
   if(user) {
     res.status(200).json(user);
@@ -62,14 +63,14 @@ const profile = async (req, res) => {
   }
 }
 
-const logout = async (req, res) => {
-   token = req.headers['authorization'].split(' ')[1];
+const logout = async (req: Request, res: Response): Promise<void> => {
+   const token = req.headers['authorization'].split(' ')[1];
    invalidateToken(token);
    res.status(200).send('logout successful');
 }
 
 
-const getAllButMe = async (req, res) => {
+const getAllButMe = async (req: Request, res: Response): Promise<void> => {
   try {
     const users = await User.find();
     const allButMe = users.filter(user => user.id !== req.body._id);
@@ -81,7 +82,7 @@ const getAllButMe = async (req, res) => {
   }
 }
 
-const getFriendStore = async (req, res) => {
+const getFriendStore = async (req: Request, res: Response): Promise<void> => {
   try {
     const user = await User.findOne({username: req.body.username});
     if (user) {
