@@ -4,21 +4,64 @@ import _ from 'lodash';
 import User from '../models/user';
 import uuid from 'uuid';
 
+interface recipeNote {
+  id: string;
+  text: string;
+}
 
-const fetchWithTimeout = (url, options, timeout = 5000) => {
+interface recipe {
+  id: string;
+  name: string;
+  keywords: string[];
+  image: string;
+  recipeYield: string;
+  recipeIngredient: string[];
+  recipeInstructions: string[];
+  publisher: string;
+  author: string;
+  url: string;
+  notes: recipeNote[];
+  origin: string;
+}
+
+interface RecipeResponse {
+  name: string;
+  keywords: string;
+  image: {
+    url: string;
+  };
+  recipeYield: string;
+  recipeIngredient: string[];
+  recipeInstructions: [{
+    text: string;
+  }];
+  publisher: {
+    name: string;
+  };
+  author: { name: string; }[];
+}
+
+type fetchOptions = Record<string, unknown>;
+// type RecipeResponse = Record<string, unknown>;
+
+const fetchWithTimeout = (url: string, options?: fetchOptions, timeout: number = 5000): Promise<Response | unknown> => {
   return Promise.race([
-      fetch(url, options),
-      new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('timeout')), timeout)
-      )
+    fetch(url, options),
+    new Promise((_, reject) =>
+    setTimeout(() => reject(new Error('timeout')), timeout)
+    )
   ]);
 }
 
-const fetchHtml = (url) => {
-  return fetchWithTimeout(url).then(res => res.text());
+function isResponse(res: Response | unknown): res is Response {
+  return (res as Response).text !== undefined;
 }
 
-const parseHtml = (html) => {
+const fetchHtml = (url: string): Promise<string | void> => {
+  return fetchWithTimeout(url).then(res => {if (isResponse(res)) res.text()});
+}
+
+const parseHtml = (html: string): RecipeResponse | boolean => {
   const $ = cheerio.load(html);
   const jsonld = $('script[type="application/ld+json"]').html();
   if (!jsonld) return false;
@@ -34,20 +77,30 @@ const parseHtml = (html) => {
     }
   }
 
-  if (recipe.recipeIngredient) {
+  if (recipe.hasOwnProperty('author')) {
+    if (!Array.isArray(recipe.author) && typeof recipe.author === 'object') {
+      recipe.author = [recipe.author];
+    }
+  }
+
+  if (recipe.hasOwnProperty('recipeIngredient')) {
     return recipe;
-  } else if (nestedRecipe.recipeIngredient) {
-    return nestedRecipe;
+  } else if (nestedRecipe.hasOwnProperty('recipeIngredient')) {
+    return nestedRecipe as RecipeResponse;
   } else {
     return false;
   }
 }
 
-const extractData = (jsonld) => {
-  desiredKeys = ['name','keywords','recipeYield', 'recipeIngredient','image', 'recipeInstructions', 'publisher', 'author']
-  const recipe = {}
+const extractData = (jsonld: RecipeResponse): Partial<recipe> => {
+  const desiredKeys = ['name','keywords','recipeYield', 'recipeIngredient','image', 'recipeInstructions', 'publisher', 'author'];
+  const recipe: Partial<recipe> = {};
 
-  for (key of desiredKeys) {
+  function authorIsArray(author: { name: string; }[] | { name: string; }): author is { name: string; }[] {
+    return (author as { name: string; }[]).length !== undefined;
+  }
+
+  for (let key of desiredKeys) {
     if (jsonld.hasOwnProperty(key)) {
 
       if (key === 'keywords' && typeof jsonld[key] === 'string') {
@@ -69,11 +122,8 @@ const extractData = (jsonld) => {
         if (jsonld[key].hasOwnProperty('name')) recipe[key] = jsonld[key].name;
 
       } else if (key === 'author') {
-        if (Array.isArray(jsonld[key])) {
-          recipe[key] = jsonld[key].map(obj => obj.name).join(',');
-        } else if (jsonld[key].hasOwnProperty('name')) {
-          recipe[key] = jsonld[key].name;
-        }
+        // Will always be an array of objects now
+        recipe[key] = jsonld[key].map(obj => obj.name).join(',');
 
       } else {
         recipe[key] = jsonld[key]
@@ -84,12 +134,24 @@ const extractData = (jsonld) => {
   return recipe;
 }
 
+function isHtml(html: string | void): html is string {
+  return html !== undefined;
+}
+
+function isJsonld(jsonld: RecipeResponse | boolean): jsonld is RecipeResponse {
+  return jsonld !== false;
+}
 
 const handleScrape = async (req, res) => {
   try {
     const html = await fetchHtml(req.body.url);
-    const jsonld = parseHtml(html);
-    if(!jsonld) throw new Error('no json ld');
+    let jsonld: RecipeResponse;
+    if (isHtml(html)){
+      const jsonldRes = parseHtml(html);
+      if (isJsonld(jsonldRes)) jsonld = jsonldRes;
+    } else {
+      throw new Error('no json ld');
+    }
 
     const recipe = extractData(jsonld);
     recipe.url = req.body.url;
@@ -110,4 +172,4 @@ const handleScrape = async (req, res) => {
 
 }
 
-export default { handleScrape};
+export default { handleScrape };
