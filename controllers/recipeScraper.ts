@@ -3,6 +3,7 @@ import fetch from 'node-fetch';
 import _ from 'lodash';
 import User from '../models/user';
 import uuid from 'uuid';
+import { Request, Response } from 'express';
 
 interface recipeNote {
   id: string;
@@ -41,10 +42,13 @@ interface RecipeResponse {
   author: { name: string; }[];
 }
 
-type fetchOptions = Record<string, unknown>;
-// type RecipeResponse = Record<string, unknown>;
+interface ExpressResponse extends Response {
+  text: Function;
+}
 
-const fetchWithTimeout = (url: string, options?: fetchOptions, timeout: number = 5000): Promise<Response | unknown> => {
+type fetchOptions = Record<string, unknown>;
+
+const fetchWithTimeout = (url: string, options?: fetchOptions, timeout: number = 5000): Promise<ExpressResponse | unknown> => {
   return Promise.race([
     fetch(url, options),
     new Promise((_, reject) =>
@@ -53,8 +57,8 @@ const fetchWithTimeout = (url: string, options?: fetchOptions, timeout: number =
   ]);
 }
 
-function isResponse(res: Response | unknown): res is Response {
-  return (res as Response).text !== undefined;
+function isResponse(res: ExpressResponse | unknown): res is ExpressResponse {
+  return (res as ExpressResponse).text !== undefined;
 }
 
 const fetchHtml = (url: string): Promise<string | void> => {
@@ -95,10 +99,6 @@ const parseHtml = (html: string): RecipeResponse | boolean => {
 const extractData = (jsonld: RecipeResponse): Partial<recipe> => {
   const desiredKeys = ['name','keywords','recipeYield', 'recipeIngredient','image', 'recipeInstructions', 'publisher', 'author'];
   const recipe: Partial<recipe> = {};
-
-  function authorIsArray(author: { name: string; }[] | { name: string; }): author is { name: string; }[] {
-    return (author as { name: string; }[]).length !== undefined;
-  }
 
   for (let key of desiredKeys) {
     if (jsonld.hasOwnProperty(key)) {
@@ -142,7 +142,7 @@ function isJsonld(jsonld: RecipeResponse | boolean): jsonld is RecipeResponse {
   return jsonld !== false;
 }
 
-const handleScrape = async (req, res) => {
+const handleScrape = async (req: Request, res: Response): Promise<void> => {
   try {
     const html = await fetchHtml(req.body.url);
     let jsonld: RecipeResponse;
