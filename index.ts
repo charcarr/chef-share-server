@@ -1,19 +1,8 @@
-import express from 'express';
-import morgan from 'morgan';
-import cors from 'cors';
+import bootServer from "./server";
+import bootDB from "./db";
 
-import router from './router';
-const { PORT } = process.env;
+const port = Number(process.env.PORT);
+const { DB_CONN } = process.env;
 
-const app = express();
-
-app
-	.use(morgan('dev'))
-	.use(cors())
-	.use(express.json())
-	.use(router)
-	.get('/', (_, res) => {res.status(200).send('Hello, stranger!')})
-	.get('*', (_, res) => {res.status(404).send('Sorry, not found 😞')})
-	.listen(PORT, () => {
-    console.log(`🚀 server listening on port: ${PORT}`);
-  });
+bootDB(DB_CONN);
+bootServer(port);
