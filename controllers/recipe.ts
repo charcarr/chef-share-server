@@ -1,6 +1,7 @@
 import User from "../models/user";
+import { Request, Response } from "express";
 
-const deleteRecipe = async (req, res) => {
+const deleteRecipe = async (req: Request, res: Response): Promise<void> => {
   const userId = req.body._id;
   const recipeId = req.body.id;
 
@@ -16,7 +17,7 @@ const deleteRecipe = async (req, res) => {
   }
 }
 
-const addFromFriend = async (req, res) => {
+const addFromFriend = async (req: Request, res: Response): Promise<void> => {
   const userId = req.body._id;
   const recipe = req.body.recipe;
 
@@ -33,7 +34,7 @@ const addFromFriend = async (req, res) => {
 }
 
 
-const editRecipe = async(req, res) => {
+const editRecipe = async (req: Request, res: Response): Promise<void> => {
   const userId = req.body._id;
   const recipeId = req.body.id
   const editAction = req.params.editAction;
@@ -46,9 +47,10 @@ const editRecipe = async(req, res) => {
 
   try {
     await User.findOneAndUpdate(
-      {_id: userId, recipeStore: {$elemMatch: {id: recipeId}}},
+      { _id: userId, recipeStore: { $elemMatch: { id: recipeId } } },
       options[editAction],
-      {'new': true, 'safe': true}
+      /* @ts-ignore */
+      { 'new': true, 'safe': true }
     );
     res.status(200).send('successfully updated');
 
@@ -58,4 +60,7 @@ const editRecipe = async(req, res) => {
   }
 }
 
+
 export default { deleteRecipe, addFromFriend, editRecipe };
+
+
