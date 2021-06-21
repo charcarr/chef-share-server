@@ -1,6 +1,33 @@
-import mongoose from './index';
+import { Model, Schema, model } from 'mongoose';
 
-const userSchema = new mongoose.Schema({
+interface recipeNote {
+  id: string;
+  text: string;
+}
+
+interface recipe {
+  id: string;
+  name: string;
+  keywords: string[];
+  image: string;
+  recipeYield: string;
+  recipeIngredient: string[];
+  recipeInstructions: string[];
+  publisher: string;
+  author: string;
+  url: string;
+  notes: recipeNote[];
+  origin: string;
+}
+
+export interface UserEntry {
+  email: string;
+  password: string;
+  userame: string;
+  recipeStore: recipe[];
+}
+
+const userSchema = new Schema<UserEntry>({
   email: {
     type: String,
     required: true,
@@ -20,4 +47,6 @@ const userSchema = new mongoose.Schema({
   },
 });
 
-export default mongoose.model('User', userSchema);
+const User: Model<UserEntry> = model('User', userSchema);
+
+export default User;
