@@ -6,7 +6,7 @@ import { validateToken, invalidateToken } from '../middlewares/tokenValidation';
 
 const SECRET_KEY = process.env.SECRET_KEY;
 
-const createUser = async (req: Request, res: Response) => {
+const createUser = async (req: Request, res: Response): Promise<Response<void>> => {
   try {
     const {email, password, username} = req.body;
 
