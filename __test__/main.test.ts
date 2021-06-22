@@ -73,6 +73,13 @@ describe('POST /signup', () => {
   })
 });
 
+describe('POST /login', () => {
+  let endpoint: Test;
+  beforeEach(() => {
+    endpoint = request(server).post('/login');
+  });
+});
+
 afterAll(async () => {
   await db?.connection.close();
   server.close();
