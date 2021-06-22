@@ -1,9 +1,10 @@
+import { NextFunction, Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import { isTokenValid } from './tokenValidation';
 
 const { SECRET_KEY } = process.env;
 
-const authMiddleware = async (req, res, next) => {
+const authMiddleware = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
   try {
     // get token
     const authHeaders = req.headers.authorization;
@@ -14,8 +15,8 @@ const authMiddleware = async (req, res, next) => {
       throw new Error('invalid token');
     }
 
-    const tokenData = jwt.verify(token, SECRET_KEY);
-    req.body._id = tokenData._id;
+    const tokenData = jwt.verify(token, SECRET_KEY as string);
+    req.body._id = (tokenData as jwt.JwtPayload)._id;
 
     next();
   } catch (e) {

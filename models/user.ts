@@ -23,7 +23,7 @@ interface recipe {
 export interface UserEntry {
   email: string;
   password: string;
-  userame: string;
+  username: string;
   recipeStore: recipe[];
 }
 
