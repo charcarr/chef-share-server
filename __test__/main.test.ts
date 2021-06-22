@@ -125,7 +125,7 @@ describe('GET /logout', () => {
     const response = await endpoint.set('Authorization', 'Bearer: ' + newUser.accessToken);
     expect(response.status).toBe(200);
   });
-})
+});
 
 afterAll(async () => {
   await db?.connection.close();
