@@ -16,7 +16,7 @@ let mockUsers: UserEntry[];
 interface MockNewUser {
   email: string,
   password: string,
-  username: string
+  username?: string
 }
 
 beforeAll(async () => {
@@ -34,7 +34,7 @@ test('Mock users must be present', () => {
   expect(mockUsers[0].recipeStore[0].notes).toHaveLength(2);
 });
 
-describe('POST /signup', () => {
+describe.skip('POST /signup', () => {
   let endpoint: Test;
   const newUser: MockNewUser = {
     email: 'charley@chefshare.com',
@@ -73,7 +73,40 @@ describe('POST /signup', () => {
   })
 });
 
+describe.skip('POST /login', () => {
+  let endpoint: Test;
+
+  beforeEach(() => {
+    endpoint = request(server).post('/login');
+  });
+
+  test('Returns 400 for missing data', async () => {
+    const response = await endpoint.send({});
+    expect(response.status).toBe(400);
+  });
+
+  test('Return 403 for invalid password', async () => {
+    const userWrongPass: MockNewUser = {
+      email: 'charley@chefshare.com',
+      password: 'password123a',
+    };
+    const response = await endpoint.send({userWrongPass});
+    expect(response.status).toBe(403);
+  });
+
+  test('Returns a token for a valid user', async () => {
+    const userCorrectPass: MockNewUser = {
+      email: 'charley@chefshare.com',
+      password: 'password123',
+    };
+    const response = await endpoint.send(userCorrectPass);
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty('accessToken');
+  });
+
+});
+
 afterAll(async () => {
   await db?.connection.close();
-  server.close();
+  server?.close();
 });
