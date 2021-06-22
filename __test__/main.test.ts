@@ -13,11 +13,18 @@ let server: Server;
 let db: Mongoose | undefined;
 let mockUsers: UserEntry[];
 
-interface MockNewUser {
-  email: string,
-  password: string,
-  username?: string
+interface MockUser {
+  email: string;
+  password: string;
+  username?: string;
+  accessToken?: string;
 }
+
+const newUser: MockUser = {
+  email: 'charley@chefshare.com',
+  password: 'password123',
+  username: 'charcarr'
+};
 
 beforeAll(async () => {
   db = await bootDB(connectionString);
@@ -34,13 +41,8 @@ test('Mock users must be present', () => {
   expect(mockUsers[0].recipeStore[0].notes).toHaveLength(2);
 });
 
-describe.skip('POST /signup', () => {
+describe('POST /signup', () => {
   let endpoint: Test;
-  const newUser: MockNewUser = {
-    email: 'charley@chefshare.com',
-    password: 'password123',
-    username: 'charcarr'
-  };
 
   beforeEach(() => {
     endpoint = request(server).post('/signup');
@@ -63,7 +65,7 @@ describe.skip('POST /signup', () => {
   });
 
   test('Return 409 if username already exists', async () => {
-    const sameUsername: MockNewUser = {
+    const sameUsername: MockUser = {
       email: 'char@chefshare.com',
       password: 'password123',
       username: 'charcarr'
@@ -73,7 +75,7 @@ describe.skip('POST /signup', () => {
   })
 });
 
-describe.skip('POST /login', () => {
+describe('POST /login', () => {
   let endpoint: Test;
 
   beforeEach(() => {
@@ -86,25 +88,44 @@ describe.skip('POST /login', () => {
   });
 
   test('Return 403 for invalid password', async () => {
-    const userWrongPass: MockNewUser = {
+    const userWrongPass: MockUser = {
       email: 'charley@chefshare.com',
       password: 'password123a',
     };
-    const response = await endpoint.send({userWrongPass});
+    const response = await endpoint.send(userWrongPass);
     expect(response.status).toBe(403);
   });
 
   test('Returns a token for a valid user', async () => {
-    const userCorrectPass: MockNewUser = {
+    const userCorrectPass: MockUser = {
       email: 'charley@chefshare.com',
       password: 'password123',
     };
     const response = await endpoint.send(userCorrectPass);
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('accessToken');
+    newUser.accessToken = response.body.accessToken;
+  });
+});
+
+describe('GET /logout', () => {
+  let endpoint: Test;
+
+  beforeEach(() => {
+    endpoint = request(server).get('/logout');
   });
 
-});
+  test('Returns 401 for invalid token to logout', async () => {
+    // Status 401 is returned from auth middleware
+    const response = await endpoint.set('Authorization', 'Bearer: badToken');
+    expect(response.status).toBe(401);
+  });
+
+  test('Should logout with correct token', async () => {
+    const response = await endpoint.set('Authorization', 'Bearer: ' + newUser.accessToken);
+    expect(response.status).toBe(200);
+  });
+})
 
 afterAll(async () => {
   await db?.connection.close();
