@@ -10,7 +10,6 @@ const deleteRecipe = async (req: Request, res: Response): Promise<void> => {
       {$pull: {'recipeStore': {id: recipeId}}}
     );
     res.status(200).send('successfully deleted');
-
   } catch (e) {
     console.log(e);
     res.status(500).send(e);
@@ -33,13 +32,12 @@ const addFromFriend = async (req: Request, res: Response): Promise<void> => {
 
 }
 
-
 const editRecipe = async (req: Request, res: Response): Promise<void> => {
-  const userId = req.body._id;
-  const recipeId = req.body.id
-  const editAction = req.params.editAction;
+  const userId: string = req.body._id;
+  const recipeId: string = req.body.id
+  const editAction: string = req.params.editAction;
 
-  let options = {
+  let options: Record<string, Record<string, Record<string, unknown>>> = {
     'nameChange': {$set: {'recipeStore.$.name': req.body.payload}},
     'addNote': {$push: {'recipeStore.$.notes': req.body.payload}},
     'deleteNote':{$pull: {'recipeStore.$.notes': {id: req.body.payload}}},
@@ -60,7 +58,4 @@ const editRecipe = async (req: Request, res: Response): Promise<void> => {
   }
 }
 
-
 export default { deleteRecipe, addFromFriend, editRecipe };
-
-
