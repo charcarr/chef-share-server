@@ -28,9 +28,7 @@ interface recipe {
 interface RecipeResponse {
   name: string;
   keywords: string;
-  image: {
-    url: string;
-  };
+  image: string;
   recipeYield: string;
   recipeIngredient: string[];
   recipeInstructions: [{
@@ -76,14 +74,24 @@ const parseHtml = (html: string): RecipeResponse | boolean => {
     console.log('i was nested');
     if (Array.isArray(recipe)){
       nestedRecipe = recipe.filter(obj => obj['@type'] === 'Recipe')[0];
-    } else if (nestedRecipe !== {}) {
-      nestedRecipe = recipe['@graph'].filter(obj => obj['@type'] === 'Recipe')[0];
     }
+    // This would always be false... could not find a reason to use it with data we found
+    // } else if (nestedRecipe !== {}) {
+    //   nestedRecipe = recipe['@graph'].filter(obj => obj['@type'] === 'Recipe')[0];
+    // }
   }
 
   if (recipe.hasOwnProperty('author')) {
     if (!Array.isArray(recipe.author) && typeof recipe.author === 'object') {
       recipe.author = [recipe.author];
+    }
+  }
+
+  if (recipe.hasOwnProperty('image')) {
+    if (Array.isArray(recipe.image)) {
+      recipe.image = recipe.image[0];
+    } else if (recipe.image.hasOwnProperty('url')) {
+      recipe.image = recipe.image.url;
     }
   }
 
@@ -97,7 +105,7 @@ const parseHtml = (html: string): RecipeResponse | boolean => {
 }
 
 const extractData = (jsonld: RecipeResponse): Partial<recipe> => {
-  const desiredKeys = ['name','keywords','recipeYield', 'recipeIngredient','image', 'recipeInstructions', 'publisher', 'author'];
+  const desiredKeys: string[] = ['name','keywords','recipeYield', 'recipeIngredient','image', 'recipeInstructions', 'publisher', 'author'];
   const recipe: Partial<recipe> = {};
 
   for (let key of desiredKeys) {
@@ -105,12 +113,6 @@ const extractData = (jsonld: RecipeResponse): Partial<recipe> => {
 
       if (key === 'keywords' && typeof jsonld[key] === 'string') {
         recipe[key] = jsonld[key].split(',');
-
-      } else if (key === 'image' && Array.isArray(jsonld[key])) {
-        recipe[key] = jsonld[key][0];
-
-      } else if (key === 'image' && jsonld[key].hasOwnProperty('url')) {
-        recipe[key] = jsonld[key].url;
 
       } else if (key === 'recipeYield' && typeof jsonld[key] !== 'string') {
         recipe[key] = '';
@@ -125,8 +127,14 @@ const extractData = (jsonld: RecipeResponse): Partial<recipe> => {
         // Will always be an array of objects now
         recipe[key] = jsonld[key].map(obj => obj.name).join(',');
 
-      } else {
-        recipe[key] = jsonld[key]
+      } else if (key === 'name') {
+        recipe[key] = jsonld[key];
+
+      } else if (key === 'recipeIngredient') {
+        recipe[key] = jsonld[key];
+
+      } else if (key === 'image') {
+        recipe[key] = jsonld[key];
       }
     }
   }
@@ -149,6 +157,7 @@ const handleScrape = async (req: Request, res: Response): Promise<void> => {
     if (isHtml(html)){
       const jsonldRes = parseHtml(html);
       if (isJsonld(jsonldRes)) jsonld = jsonldRes;
+      else throw new Error('no json ld');
     } else {
       throw new Error('no json ld');
     }
@@ -159,7 +168,7 @@ const handleScrape = async (req: Request, res: Response): Promise<void> => {
     recipe.notes = [];
 
     const user = await User.findById(req.body._id);
-    recipe.origin = user.username;
+    if (user) recipe.origin = user.username;
 
     // save to user document
     await User.findByIdAndUpdate(req.body._id, {$push: {recipeStore: recipe}}, {new: true});

@@ -1,14 +1,14 @@
 // token whitelist
-let storage = [];
+let storage: string[] = [];
 
-export function validateToken (token) {
+export function validateToken (token: string) {
   storage.push(token);
 }
 
-export function invalidateToken (token) {
+export function invalidateToken (token: string) {
   storage = storage.filter((tok) => tok !== token);
 }
 
-export function isTokenValid (token) {
+export function isTokenValid (token: string) {
   return storage.includes(token);
 }

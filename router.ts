@@ -1,7 +1,7 @@
 import express from 'express';
 import userController from './controllers/users';
 import recipeScrapingController from './controllers/recipeScraper';
-import recipeController from './controllers/recipe';
+import recipeController from './controllers/recipes';
 import authMiddleware from './middlewares/auth';
 
 const router = express.Router();
