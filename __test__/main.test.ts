@@ -5,6 +5,7 @@ import bootServer from '../server';
 import bootDB from '../db';
 import { seedDB } from '../__seed__';
 import { UserEntry } from '../models/user';
+import faker from 'faker';
 
 const port = Number(process.env.TEST_PORT);
 const connectionString = String(process.env.TEST_DB_CONN);
@@ -201,15 +202,10 @@ describe('POST /scrape', () => {
 });
 
 describe('POST /editRecipe/:editAction', () => {
-  let endpoint: Test;
-
-  // beforeEach(() => {
-  //   endpoint = ;
-  // });
 
   test('Should change recipe name', async () => {
     const { body } = await request(server).get('/profile').set('Authorization', 'Bearer: ' + newUser.accessToken);
-    const editBody = { id: body.recipeStore[0].id, payload: 'Sunday waffles'}
+    const editBody = { id: body.recipeStore[0].id, payload: 'Sunday waffles' };
     const response = await request(server)
       .post('/editRecipe/nameChange')
       .set('Authorization', 'Bearer: ' + newUser.accessToken)
@@ -219,22 +215,66 @@ describe('POST /editRecipe/:editAction', () => {
     const newResponse = await request(server).get('/profile').set('Authorization', 'Bearer: ' + newUser.accessToken);
     expect(newResponse.body.recipeStore[0].name).toBe('Sunday waffles');
   });
+
+  test('Should add recipe note', async () => {
+    const { body } = await request(server).get('/profile').set('Authorization', 'Bearer: ' + newUser.accessToken);
+    const newNote = { id: faker.datatype.uuid(), text: 'Waffles for hangovers only' };
+    const editBody = { id: body.recipeStore[0].id, payload: newNote };
+    const response = await request(server)
+      .post('/editRecipe/addNote')
+      .set('Authorization', 'Bearer: ' + newUser.accessToken)
+      .send(editBody);
+
+    expect(response.status).toBe(200);
+    const newResponse = await request(server).get('/profile').set('Authorization', 'Bearer: ' + newUser.accessToken);
+    expect(newResponse.body.recipeStore[0].notes[0].text).toBe('Waffles for hangovers only');
+  });
+
+  test('Should delete recipe note', async () => {
+    const { body } = await request(server).get('/profile').set('Authorization', 'Bearer: ' + newUser.accessToken);
+    const editBody = { id: body.recipeStore[0].id, payload: body.recipeStore[0].notes[0].id };
+    const response = await request(server)
+      .post('/editRecipe/deleteNote')
+      .set('Authorization', 'Bearer: ' + newUser.accessToken)
+      .send(editBody);
+
+    expect(response.status).toBe(200);
+    const newResponse = await request(server).get('/profile').set('Authorization', 'Bearer: ' + newUser.accessToken);
+    expect(newResponse.body.recipeStore[0].notes).toHaveLength(0);
+  });
 });
 
-// describe('POST /deleteRecipe', () => {
-//   let endpoint: Test;
+describe('POST /addFromFriend', () => {
+  let endpoint: Test;
 
-//   beforeEach(() => {
-//     endpoint = request(server).post('/deleteRecipe');
-//   });
+  beforeEach(() => {
+    endpoint = request(server).post('/addFromFriend');
+  });
 
+  test('Should add recipe to user', async () => {
+    const friendRecipe = { recipe: mockUsers[0].recipeStore[0] };
+    const response = await endpoint.set('Authorization', 'Bearer: ' + newUser.accessToken).send(friendRecipe);
+    expect(response.status).toBe(204);
+    const newResponse = await request(server).get('/profile').set('Authorization', 'Bearer: ' + newUser.accessToken);
+    expect(newResponse.body.recipeStore[1].id).toBe(mockUsers[0].recipeStore[0].id);
+  });
+});
 
-// });
+describe('POST /deleteRecipe', () => {
+  let endpoint: Test;
 
-// describe('POST /addFromFriend', () => {
+  beforeEach(() => {
+    endpoint = request(server).post('/deleteRecipe');
+  });
 
-// });
-
+  test('Should delete recipe from user recipe store', async () => {
+    const recipeToDelete = { id: mockUsers[0].recipeStore[0].id };
+    const response = await endpoint.set('Authorization', 'Bearer: ' + newUser.accessToken).send(recipeToDelete);
+    expect(response.status).toBe(200);
+    const newResponse = await request(server).get('/profile').set('Authorization', 'Bearer: ' + newUser.accessToken);
+    expect(newResponse.body.recipeStore).toHaveLength(1);
+  });
+});
 
 afterAll(async () => {
   await db?.connection.close();
