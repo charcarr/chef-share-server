@@ -2,7 +2,7 @@ import cheerio from 'cheerio';
 import fetch from 'node-fetch';
 import _ from 'lodash';
 import User from '../models/user';
-import uuid from 'uuid';
+import { v4 } from 'uuid';
 import { Request, Response } from 'express';
 
 interface recipeNote {
@@ -60,7 +60,7 @@ function isResponse(res: ExpressResponse | unknown): res is ExpressResponse {
 }
 
 const fetchHtml = (url: string): Promise<string | void> => {
-  return fetchWithTimeout(url).then(res => {if (isResponse(res)) res.text()});
+  return fetchWithTimeout(url).then(res => {if (isResponse(res)) return res.text()});
 }
 
 const parseHtml = (html: string): RecipeResponse | boolean => {
@@ -153,6 +153,7 @@ function isJsonld(jsonld: RecipeResponse | boolean): jsonld is RecipeResponse {
 const handleScrape = async (req: Request, res: Response): Promise<void> => {
   try {
     const html = await fetchHtml(req.body.url);
+
     let jsonld: RecipeResponse;
     if (isHtml(html)){
       const jsonldRes = parseHtml(html);
@@ -164,7 +165,7 @@ const handleScrape = async (req: Request, res: Response): Promise<void> => {
 
     const recipe = extractData(jsonld);
     recipe.url = req.body.url;
-    recipe.id = uuid.v4();
+    recipe.id = v4();
     recipe.notes = [];
 
     const user = await User.findById(req.body._id);

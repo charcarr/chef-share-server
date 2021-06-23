@@ -127,7 +127,7 @@ describe('GET /logout', () => {
     const response = await endpoint.set('Authorization', 'Bearer: ' + newUser.accessToken);
     expect(response.status).toBe(200);
   });
-})
+});
 
 describe('GET /profile', () => {
   let endpoint: Test;
@@ -146,7 +146,6 @@ describe('GET /profile', () => {
     const response = await endpoint.set('Authorization', 'Bearer: ' + newUser.accessToken);
     expect(response.status).toBe(200);
   });
-
 });
 
 describe('GET /users', () => {
@@ -155,7 +154,6 @@ describe('GET /users', () => {
   beforeEach(() => {
     endpoint = request(server).get('/users');
   });
-
 
   test('Returns all users except for current user', async () => {
     const response = await endpoint.set('Authorization', 'Bearer: ' + newUser.accessToken);
@@ -181,6 +179,61 @@ describe('POST /getFriendStore', () => {
     expect(response.body[0]).toHaveProperty('recipeYield');
   });
 });
+
+describe('POST /scrape', () => {
+  let endpoint: Test;
+
+  beforeEach(() => {
+    endpoint = request(server).post('/scrape');
+  });
+
+  test('Should create and store a recipe from a url', async () => {
+    const url: string = 'https://www.bonappetit.com/recipe/french-toast-waffles';
+    const response = await endpoint.set('Authorization', 'Bearer: ' + newUser.accessToken).send({url});
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty('recipeIngredient');
+    expect(response.body).toHaveProperty('url');
+    expect(response.body).toHaveProperty('id');
+    expect(response.body).toHaveProperty('notes');
+    expect(response.body).toHaveProperty('origin');
+    expect(response.body.url).toBe(url);
+  });
+});
+
+describe('POST /editRecipe/:editAction', () => {
+  let endpoint: Test;
+
+  // beforeEach(() => {
+  //   endpoint = ;
+  // });
+
+  test('Should change recipe name', async () => {
+    const { body } = await request(server).get('/profile').set('Authorization', 'Bearer: ' + newUser.accessToken);
+    const editBody = { id: body.recipeStore[0].id, payload: 'Sunday waffles'}
+    const response = await request(server)
+      .post('/editRecipe/nameChange')
+      .set('Authorization', 'Bearer: ' + newUser.accessToken)
+      .send(editBody);
+
+    expect(response.status).toBe(200);
+    const newResponse = await request(server).get('/profile').set('Authorization', 'Bearer: ' + newUser.accessToken);
+    expect(newResponse.body.recipeStore[0].name).toBe('Sunday waffles');
+  });
+});
+
+// describe('POST /deleteRecipe', () => {
+//   let endpoint: Test;
+
+//   beforeEach(() => {
+//     endpoint = request(server).post('/deleteRecipe');
+//   });
+
+
+// });
+
+// describe('POST /addFromFriend', () => {
+
+// });
 
 
 afterAll(async () => {
