@@ -1,6 +1,7 @@
-const User = require("../models/user");
+import User from '../models/user';
+import { Request, Response } from 'express';
 
-const deleteRecipe = async (req, res) => {
+const deleteRecipe = async (req: Request, res: Response): Promise<void> => {
   const userId = req.body._id;
   const recipeId = req.body.id;
 
@@ -9,14 +10,13 @@ const deleteRecipe = async (req, res) => {
       {$pull: {'recipeStore': {id: recipeId}}}
     );
     res.status(200).send('successfully deleted');
-
   } catch (e) {
     console.log(e);
     res.status(500).send(e);
   }
 }
 
-const addFromFriend = async (req, res) => {
+const addFromFriend = async (req: Request, res: Response): Promise<void> => {
   const userId = req.body._id;
   const recipe = req.body.recipe;
 
@@ -29,16 +29,14 @@ const addFromFriend = async (req, res) => {
     console.log(e);
     res.status(500).send(e);
   }
-
 }
 
+const editRecipe = async (req: Request, res: Response): Promise<void> => {
+  const userId: string = req.body._id;
+  const recipeId: string = req.body.id
+  const editAction: string = req.params.editAction;
 
-const editRecipe = async(req, res) => {
-  const userId = req.body._id;
-  const recipeId = req.body.id
-  const editAction = req.params.editAction;
-
-  let options = {
+  let options: Record<string, Record<string, Record<string, unknown>>> = {
     'nameChange': {$set: {'recipeStore.$.name': req.body.payload}},
     'addNote': {$push: {'recipeStore.$.notes': req.body.payload}},
     'deleteNote':{$pull: {'recipeStore.$.notes': {id: req.body.payload}}},
@@ -46,9 +44,10 @@ const editRecipe = async(req, res) => {
 
   try {
     await User.findOneAndUpdate(
-      {_id: userId, recipeStore: {$elemMatch: {id: recipeId}}},
+      { _id: userId, recipeStore: { $elemMatch: { id: recipeId } } },
       options[editAction],
-      {'new': true, 'safe': true}
+      /* @ts-ignore */
+      { 'new': true, 'safe': true }
     );
     res.status(200).send('successfully updated');
 
@@ -58,5 +57,4 @@ const editRecipe = async(req, res) => {
   }
 }
 
-
-module.exports = { deleteRecipe, addFromFriend, editRecipe};
+export default { deleteRecipe, addFromFriend, editRecipe };
