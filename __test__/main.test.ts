@@ -8,6 +8,10 @@ import { UserEntry } from '../models/user';
 import faker from 'faker';
 
 const port = Number(process.env.TEST_PORT);
+// *****
+// * ENSURE TEST_DB_CONN POINTS TO TEST DATABASE
+// * DATABASE IS ERASED AND RESEEDED PRIOR TO RUNNING TESTS!
+// *****
 const connectionString = String(process.env.TEST_DB_CONN);
 
 let server: Server;
@@ -27,7 +31,6 @@ const newUser: MockUser = {
   username: 'charcarr'
 };
 
-
 beforeAll(async () => {
   db = await bootDB(connectionString);
   if (db) {
@@ -35,7 +38,6 @@ beforeAll(async () => {
     mockUsers = await seedDB(db);
   }
   server = bootServer(port);
-
 });
 
 test('Mock users must be present', () => {
@@ -75,7 +77,7 @@ describe('POST /signup', () => {
     };
     const response = await endpoint.send(sameUsername);
     expect(response.status).toBe(409);
-  })
+  });
 });
 
 describe('POST /login', () => {
@@ -95,6 +97,7 @@ describe('POST /login', () => {
       email: 'charley@chefshare.com',
       password: 'password123a',
     };
+
     const response = await endpoint.send(userWrongPass);
     expect(response.status).toBe(403);
   });
@@ -104,6 +107,7 @@ describe('POST /login', () => {
       email: 'charley@chefshare.com',
       password: 'password123',
     };
+
     const response = await endpoint.send(userCorrectPass);
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('accessToken');
@@ -139,6 +143,7 @@ describe('GET /profile', () => {
       email: 'charley@chefshare.com',
       password: 'password123',
     };
+
     const response = await request(server).post('/login').send(userCorrectPass);
     newUser.accessToken = response.body.accessToken;
   });
@@ -174,6 +179,7 @@ describe('POST /getFriendStore', () => {
     const user: MockUser = {
       username: mockUsers[0].username,
     };
+
     const response = await endpoint.set('Authorization', 'Bearer: ' + newUser.accessToken).send(user);
     expect(response.status).toBe(200);
     expect(response.body).toHaveLength(4);
@@ -202,7 +208,6 @@ describe('POST /scrape', () => {
 });
 
 describe('POST /editRecipe/:editAction', () => {
-
   test('Should change recipe name', async () => {
     const { body } = await request(server).get('/profile').set('Authorization', 'Bearer: ' + newUser.accessToken);
     const editBody = { id: body.recipeStore[0].id, payload: 'Sunday waffles' };

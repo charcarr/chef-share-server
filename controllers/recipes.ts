@@ -1,5 +1,5 @@
-import User from "../models/user";
-import { Request, Response } from "express";
+import User from '../models/user';
+import { Request, Response } from 'express';
 
 const deleteRecipe = async (req: Request, res: Response): Promise<void> => {
   const userId = req.body._id;
@@ -29,7 +29,6 @@ const addFromFriend = async (req: Request, res: Response): Promise<void> => {
     console.log(e);
     res.status(500).send(e);
   }
-
 }
 
 const editRecipe = async (req: Request, res: Response): Promise<void> => {

@@ -13,7 +13,7 @@ export const seedDB = async (db: Mongoose): Promise<UserEntry[]> => {
       name: faker.lorem.words(3),
       keywords: Array.from({ length: 3 }, () => faker.lorem.word()),
       image: faker.internet.url(),
-      recipeYield: "Serves " + faker.datatype.number(4).toString(),
+      recipeYield: 'Serves ' + faker.datatype.number(4).toString(),
       recipeIngredient: Array.from({ length: 5 }, () => faker.lorem.words(2)),
       recipeInstructions: Array.from({ length: 5 }, () => faker.lorem.words(6)),
       publisher: faker.name.findName(),
