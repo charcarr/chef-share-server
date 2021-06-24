@@ -165,7 +165,7 @@ const handleScrape = async (req: Request, res: Response): Promise<void> => {
 
     const recipe = extractData(jsonld);
     recipe.url = req.body.url;
-    recipe.id = v4();
+    recipe.id = v4(); // uuid.v4() was producing errors
     recipe.notes = [];
 
     const user = await User.findById(req.body._id);
@@ -179,7 +179,6 @@ const handleScrape = async (req: Request, res: Response): Promise<void> => {
     console.log(e);
     res.status(400).send(e.message);
   }
-
 }
 
 export default { handleScrape };
