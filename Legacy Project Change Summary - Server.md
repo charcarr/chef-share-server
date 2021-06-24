@@ -12,6 +12,6 @@ Legacy Project Summary of Changes - Chef Share Server
   - Added 'author' and 'image' property handling (lines 84-96) to ensure that what comes out of recipeScraper is always the same format, per Ben's suggestion
   - Added else ifs for all types to address typescript issues
   - Added type guards (examples on lines 145-151) to handle function outputs that might be of two types
-- Implemented Jest for backend testing
+- Implemented Jest with SuperTest for backend testing
 - Added seed folder to enable seeding of test database with mock data for 25 users with 4 recipes each
 - Added testing for all endpoints in router, addressing major functionality of each controller
