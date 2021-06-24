@@ -1,9 +1,10 @@
 const express = require('express');
+
 const router = express.Router();
-const userController = require('./controllers/users');
-const recipeScrapingController = require('./controllers/recipeScraper');
-const recipeController = require('./controllers/recipe');
-const authMiddleware = require('./middlewares/auth');
+const userController = require('./controllers/users.ts');
+const recipeScrapingController = require('./controllers/recipeScraper.ts');
+const recipeController = require('./controllers/recipe.ts');
+const authMiddleware = require('./middlewares/auth.ts');
 
 router.post('/signup', userController.createUser);
 router.post('/login', userController.login);
@@ -13,9 +14,16 @@ router.get('/users', authMiddleware, userController.getAllButMe);
 router.post('/getFriendStore', authMiddleware, userController.getFriendStore);
 
 router.post('/scrape', authMiddleware, recipeScrapingController.handleScrape);
-router.post('/deleteRecipe', authMiddleware, recipeController.deleteRecipe);
+router.post(
+  '/deleteRecipe/:recipeId',
+  authMiddleware,
+  recipeController.deleteRecipe
+);
 router.post('/addFromFriend', authMiddleware, recipeController.addFromFriend);
-router.post('/editRecipe/:editAction', authMiddleware, recipeController.editRecipe);
-
+router.post(
+  '/editRecipe/:editAction',
+  authMiddleware,
+  recipeController.editRecipe
+);
 
 module.exports = router;
